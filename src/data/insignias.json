@@ -1,0 +1,102 @@
+[
+  {
+    "id": "primera-vez",
+    "nombre": "Primer paso",
+    "descripcion": "Clasificaste tu primer residuo con EcoScan",
+    "icono": "🌱",
+    "tipo": "firstTime",
+    "valor": 1,
+    "categoria": null,
+    "mensaje": "¡Bienvenido al mundo del reciclaje inteligente!"
+  },
+  {
+    "id": "explorador-10",
+    "nombre": "Explorador reciclador",
+    "descripcion": "Has clasificado 10 residuos en total",
+    "icono": "🔍",
+    "tipo": "count",
+    "valor": 10,
+    "categoria": null,
+    "mensaje": "¡Ya eres todo un explorador del reciclaje!"
+  },
+  {
+    "id": "campeon-50",
+    "nombre": "Campeón Verde",
+    "descripcion": "Has clasificado 50 residuos en total",
+    "icono": "🏆",
+    "tipo": "count",
+    "valor": 50,
+    "categoria": null,
+    "mensaje": "¡Eres un verdadero campeón del reciclaje!"
+  },
+  {
+    "id": "racha-7",
+    "nombre": "Constante Comprometido",
+    "descripcion": "Reciclaste 7 días consecutivos",
+    "icono": "🔥",
+    "tipo": "streak",
+    "valor": 7,
+    "categoria": null,
+    "mensaje": "¡Una semana completa de reciclaje! Eres un ejemplo a seguir."
+  },
+  {
+    "id": "racha-30",
+    "nombre": "Guardián del Planeta",
+    "descripcion": "Reciclaste 30 días consecutivos",
+    "icono": "🌍",
+    "tipo": "streak",
+    "valor": 30,
+    "categoria": null,
+    "mensaje": "¡Un mes entero! Eres un guardián del planeta Costa Rica."
+  },
+  {
+    "id": "peligroso-master",
+    "nombre": "Experto en Residuos Peligrosos",
+    "descripcion": "Clasificaste correctamente 5 residuos peligrosos",
+    "icono": "⚠️",
+    "tipo": "count",
+    "valor": 5,
+    "categoria": "Peligroso",
+    "mensaje": "¡Gracias! Los residuos peligrosos son los más importantes de clasificar correctamente."
+  },
+  {
+    "id": "electronico-hero",
+    "nombre": "Héroe Digital",
+    "descripcion": "Reciclaste tu primer dispositivo electrónico",
+    "icono": "📱",
+    "tipo": "firstTime",
+    "valor": 1,
+    "categoria": "Electrónico",
+    "mensaje": "¡Un dispositivo reciclado evita kilos de contaminación tóxica!"
+  },
+  {
+    "id": "kg-10",
+    "nombre": "Movedor de Montañas",
+    "descripcion": "Reciclaste un total de 10 kg de residuos",
+    "icono": "⚖️",
+    "tipo": "weight",
+    "valor": 10,
+    "categoria": null,
+    "mensaje": "¡10 kilos de residuos transformados! Eso es mover montañas."
+  },
+  {
+    "id": "co2-5",
+    "nombre": "Defensor del Clima",
+    "descripcion": "Ahorraste 5 kg de CO₂ con tu reciclaje",
+    "icono": "🌬️",
+    "tipo": "co2",
+    "valor": 5,
+    "categoria": null,
+    "mensaje": "¡5 kg de CO₂ evitados! Estás combatiendo el cambio climático desde San Carlos."
+  },
+  {
+    "id": "variado-5",
+    "nombre": "Reciclador Completo",
+    "descripcion": "Clasificaste residuos de 5 categorías diferentes",
+    "icono": "🎨",
+    "tipo": "categories",
+    "valor": 5,
+    "categoria": null,
+    "mensaje": "¡Manejas todas las categorías de residuos! Eres un reciclador completo."
+  }
+]

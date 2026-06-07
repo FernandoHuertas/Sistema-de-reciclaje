@@ -1,0 +1,112 @@
+[
+  {
+    "id": "acopio-1",
+    "nombre": "Centro de Acopio Municipal Ciudad Quesada",
+    "direccion": "200 metros norte del Mercado Municipal, Ciudad Quesada, San Carlos",
+    "lat": 10.3282,
+    "lng": -84.4269,
+    "horario": "Lunes a viernes 7:00 am – 4:00 pm / Sábados 7:00 am – 12:00 pm",
+    "telefono": "2460-0000",
+    "materiales": ["plastico", "vidrio", "carton", "papel", "metal"],
+    "descripcion": "Centro de acopio principal del cantón de San Carlos. Acepta la mayoría de materiales reciclables comunes."
+  },
+  {
+    "id": "acopio-2",
+    "nombre": "ASADA Muelle de San Carlos",
+    "direccion": "Frente al parque central de Muelle de San Carlos",
+    "lat": 10.4589,
+    "lng": -84.4378,
+    "horario": "Lunes a viernes 8:00 am – 4:00 pm",
+    "telefono": "2469-1234",
+    "materiales": ["plastico", "vidrio", "carton", "papel", "metal"],
+    "descripcion": "Centro de acopio administrado por ASADA Muelle. Sirve a toda la zona de Muelle y comunidades aledañas."
+  },
+  {
+    "id": "acopio-3",
+    "nombre": "Municipalidad de San Carlos — Punto Verde Pital",
+    "direccion": "Al costado sur del Parque de Pital, San Carlos",
+    "lat": 10.5178,
+    "lng": -84.4722,
+    "horario": "Martes y jueves 8:00 am – 3:00 pm",
+    "telefono": "2472-0000",
+    "materiales": ["plastico", "carton", "papel", "metal"],
+    "descripcion": "Punto verde rural de la zona de Pital. Especial para plástico, cartón y metales de la zona agrícola."
+  },
+  {
+    "id": "acopio-4",
+    "nombre": "Punto de Acopio La Fortuna de San Carlos",
+    "direccion": "Frente a la Iglesia Católica de La Fortuna, 100 metros sur",
+    "lat": 10.4673,
+    "lng": -84.6434,
+    "horario": "Lunes, miércoles y viernes 8:00 am – 4:00 pm",
+    "telefono": "2479-9000",
+    "materiales": ["plastico", "vidrio", "carton", "papel", "metal", "organico"],
+    "descripcion": "Centro de acopio con compostaje para zona turística de La Fortuna. Acepta orgánicos por el programa de compostaje comunitario."
+  },
+  {
+    "id": "acopio-5",
+    "nombre": "Supermercado BM Ciudad Quesada — Contenedores Reciclaje",
+    "direccion": "Dentro del estacionamiento de BM Ciudad Quesada, frente a Palí",
+    "lat": 10.3294,
+    "lng": -84.4312,
+    "horario": "Todos los días 7:00 am – 9:00 pm",
+    "telefono": "Sin teléfono",
+    "materiales": ["plastico", "carton", "papel"],
+    "descripcion": "Contenedores de reciclaje disponibles en el estacionamiento del supermercado. Disponibles en horario comercial sin restricción."
+  },
+  {
+    "id": "acopio-6",
+    "nombre": "Colegio Técnico Profesional San Carlos — Punto Verde Estudiantil",
+    "direccion": "Dentro del CTPSC, Ciudad Quesada, entrada principal",
+    "lat": 10.3265,
+    "lng": -84.4281,
+    "horario": "Lunes a viernes 7:00 am – 4:00 pm (días lectivos)",
+    "telefono": "2460-1234",
+    "materiales": ["plastico", "papel", "carton", "metal"],
+    "descripcion": "Proyecto estudiantil de reciclaje. Acepta materiales de la comunidad en días lectivos. Iniciativa del Departamento de Ciencias."
+  },
+  {
+    "id": "acopio-7",
+    "nombre": "Punto de Acopio Electrónico — RECOPE Ciudad Quesada",
+    "direccion": "Instalaciones de RECOPE, zona industrial Ciudad Quesada",
+    "lat": 10.3310,
+    "lng": -84.4350,
+    "horario": "Lunes a viernes 8:00 am – 3:00 pm",
+    "telefono": "2460-5000",
+    "materiales": ["electronico", "plastico", "metal"],
+    "descripcion": "Punto especializado en residuos electrónicos y metales. Ideal para depositar celulares, laptops, baterías y electrodomésticos pequeños."
+  },
+  {
+    "id": "acopio-8",
+    "nombre": "Farmacia Fischel Ciudad Quesada — Medicamentos Vencidos",
+    "direccion": "Farmacia Fischel, 50 metros oeste del parque central, Ciudad Quesada",
+    "lat": 10.3278,
+    "lng": -84.4260,
+    "horario": "Lunes a sábado 7:00 am – 8:00 pm / Domingos 8:00 am – 6:00 pm",
+    "telefono": "2460-0011",
+    "materiales": ["peligroso"],
+    "descripcion": "Las farmacias Fischel participan en el programa nacional de recolección de medicamentos vencidos. Deposita tus medicamentos vencidos en el contenedor especial dentro de la farmacia."
+  },
+  {
+    "id": "acopio-9",
+    "nombre": "Punto Verde Comunidad Venecia de San Carlos",
+    "direccion": "Frente a la escuela de Venecia, San Carlos",
+    "lat": 10.3689,
+    "lng": -84.3456,
+    "horario": "Viernes 8:00 am – 2:00 pm",
+    "telefono": "2475-1234",
+    "materiales": ["plastico", "vidrio", "carton", "papel"],
+    "descripcion": "Punto verde rural de la comunidad de Venecia. Operado por voluntarios los viernes."
+  },
+  {
+    "id": "acopio-10",
+    "nombre": "Punto de Acopio Aceite Usado — Municipalidad San Carlos",
+    "direccion": "Costado norte del Palacio Municipal, Ciudad Quesada",
+    "lat": 10.3288,
+    "lng": -84.4255,
+    "horario": "Lunes a viernes 8:00 am – 4:00 pm",
+    "telefono": "2401-6565",
+    "materiales": ["peligroso"],
+    "descripcion": "Punto oficial para depositar aceite de cocina usado. Trae el aceite en botellas selladas de plástico. El aceite se convierte en biodiesel."
+  }
+]
