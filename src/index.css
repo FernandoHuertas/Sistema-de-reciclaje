@@ -1,3 +1,18 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-eco-dark: #1F5C3E;
+  --color-eco-accent: #4ADE80;
+  --color-eco-bg: #F0FDF4;
+  --color-eco-text: #1A2E1A;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #F0FDF4;
+  color: #1A2E1A;
+  font-family: system-ui, -apple-system, sans-serif;
+}
