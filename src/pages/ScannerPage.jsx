@@ -85,12 +85,12 @@ export default function ScannerPage() {
     if (phase !== 'active') return;
     const res = await classify();
     if (res) {
-      // Resultado válido: la IA encontró un match con confianza ≥ 50%
+      // Resultado válido: la IA encontró un residuo que coincide con la predicción.
       setResult({ ...res, lowConfidence: false });
     } else {
-      // Sin resultado confiable: ninguna predicción superó el umbral del 50%.
-      // Activar inmediatamente el panel de "No reconocido" para guiar al usuario al buscador.
-      setResult({ residuo: null, confidence: 0, label: 'Confianza insuficiente (< 50%)', lowConfidence: true });
+      // Sin coincidencia: ninguna predicción mapeó a un residuo conocido.
+      // Activar el panel de "No reconocido" para guiar al usuario al buscador.
+      setResult({ residuo: null, confidence: 0, label: 'Sin coincidencia clara', lowConfidence: true });
     }
     setPhase('classifying');
   }, [phase, classify]);
