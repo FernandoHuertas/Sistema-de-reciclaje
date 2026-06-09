@@ -15,8 +15,9 @@ async function loadTFModules() {
   return mobilenetModule;
 }
 
-// Umbral mínimo de confianza para aceptar una predicción como válida.
-// Por debajo de este valor el resultado se descarta y se activa el fallback de búsqueda.
+// Umbral mínimo de confianza (escala DECIMAL 0–1, no porcentaje).
+// MobileNet devuelve probabilidades entre 0.0 y 1.0.
+// Solo se aceptan predicciones con probabilidad ESTRICTAMENTE MAYOR a este valor (> 0.50).
 const CONFIDENCE_THRESHOLD = 0.50;
 
 /**
@@ -26,10 +27,12 @@ const CONFIDENCE_THRESHOLD = 0.50;
  */
 function findResiduo(predictions) {
   for (const pred of predictions) {
-    // Descartar predicciones por debajo del umbral de confianza
-    if (pred.probability < CONFIDENCE_THRESHOLD) continue;
+    // Descartar predicciones con probabilidad <= umbral (escala decimal 0–1, no porcentaje)
+    // Condición de aceptación: probabilidad ESTRICTAMENTE MAYOR a 0.50
+    if (pred.probability <= CONFIDENCE_THRESHOLD) continue;
 
-    const label = pred.className.toLowerCase();
+    // Normalizar label: minúsculas + sin espacios sobrantes (previene fallos por "Banana" vs "banana")
+    const label = pred.className.toLowerCase().trim();
 
     // Intentar match directo
     if (mappingIA[label]) {
@@ -95,12 +98,14 @@ export function useTensorflow(videoRef) {
     const video = videoRef.current;
     if (video.readyState < 2) return null;
 
+    // GUARDIA MÓVIL: si el stream aún no tiene dimensiones reales, el frame está vacío/negro.
+    // TF.js procesaría un tensor corrupto → predicciones basura. Salimos y esperamos el próximo tick.
+    if (video.videoWidth === 0 || video.videoHeight === 0) return null;
+
     // Asignar dimensiones intrínsecas reales del stream al elemento <video>
-    // para que TensorFlow.js lea el frame en su resolución real y no un cuadro en blanco.
-    if (video.videoWidth > 0 && video.videoHeight > 0) {
-      video.width = video.videoWidth;
-      video.height = video.videoHeight;
-    }
+    // para que TensorFlow.js lea el frame en su resolución real (no un cuadro en blanco).
+    video.width = video.videoWidth;
+    video.height = video.videoHeight;
 
     try {
       const predictions = await model.classify(video);
