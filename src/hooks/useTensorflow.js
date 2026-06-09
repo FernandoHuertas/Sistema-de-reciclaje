@@ -145,24 +145,30 @@ export function useTensorflow(videoRef) {
     }
   }, [model, videoRef]);
 
+  /** Detiene la inferencia continua */
+  const stopInference = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
   /**
-   * Inicia inferencia continua (2.5 FPS).
+   * Inicia inferencia continua (2.5 FPS). En cada tick clasifica el frame
+   * actual; si encuentra un residuo, llama onResult. Además, classify()
+   * actualiza rawPrediction en CADA tick, así el overlay en vivo siempre
+   * muestra lo último que ve MobileNet (aunque no haya match).
    */
-  function startInference(onResult) {
+  const startInference = useCallback((onResult) => {
     stopInference();
     intervalRef.current = setInterval(async () => {
       const result = await classify();
       if (result) onResult(result);
     }, 400);
-  }
+  }, [classify, stopInference]);
 
-  /** Detiene la inferencia continua */
-  function stopInference() {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }
+  // Limpieza al desmontar: nunca dejar el intervalo corriendo.
+  useEffect(() => () => stopInference(), [stopInference]);
 
   return { model, isLoading, loadError, classify, startInference, stopInference, rawPrediction };
 }

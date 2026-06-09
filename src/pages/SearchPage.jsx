@@ -12,6 +12,31 @@ const COLORES_CONTENEDOR = {
   'Especial': '#8E44AD',
 };
 
+// Sinónimos / palabras comunes → término que SÍ aparece en el catálogo.
+// El catálogo no tiene un ítem llamado "banano", pero sí "Residuos de frutas y
+// verduras" en la categoría "Orgánico". Este mapa hace que esas búsquedas
+// naturales encuentren la categoría correcta.
+const SINONIMOS = {
+  banano: 'orgánico', banana: 'orgánico', platano: 'orgánico', plátano: 'orgánico',
+  manzana: 'orgánico', naranja: 'orgánico', limon: 'orgánico', limón: 'orgánico',
+  pina: 'orgánico', piña: 'orgánico', mango: 'orgánico', fruta: 'orgánico',
+  frutas: 'orgánico', verdura: 'orgánico', verduras: 'orgánico', cascara: 'orgánico',
+  cáscara: 'orgánico', comida: 'orgánico', organico: 'orgánico', orgánico: 'orgánico',
+  hojas: 'orgánico', jardin: 'orgánico', jardín: 'orgánico',
+  lata: 'metal', latas: 'metal', aluminio: 'metal', acero: 'metal', metal: 'metal',
+  botella: 'botella', refresco: 'plástico', gaseosa: 'plástico', soda: 'plástico',
+  plastico: 'plástico', plástico: 'plástico', pet: 'plástico', envase: 'plástico',
+  bolsa: 'plástico', vidrio: 'vidrio', frasco: 'vidrio', taza: 'vidrio', vaso: 'vidrio',
+  celular: 'electrónico', telefono: 'electrónico', teléfono: 'electrónico',
+  laptop: 'electrónico', computadora: 'electrónico', control: 'electrónico',
+  electronico: 'electrónico', electrónico: 'electrónico', cable: 'electrónico',
+  pila: 'peligroso', pilas: 'peligroso', bateria: 'peligroso', batería: 'peligroso',
+  medicamento: 'peligroso', aceite: 'peligroso', aerosol: 'peligroso',
+  papel: 'papel', periodico: 'papel', periódico: 'papel', revista: 'papel',
+  cuaderno: 'papel', hoja: 'papel', carton: 'cartón', cartón: 'cartón',
+  caja: 'cartón', tetra: 'cartón', huevos: 'cartón',
+};
+
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
@@ -20,14 +45,19 @@ export default function SearchPage() {
     const q = query.trim().toLowerCase();
     if (!q) return residuos.slice(0, 6);
 
+    // Si la palabra es un sinónimo conocido, también buscamos por su categoría.
+    const alias = SINONIMOS[q];
+
     return residuos
-      .filter(r =>
-        r.nombre.toLowerCase().includes(q) ||
-        r.categoria.toLowerCase().includes(q) ||
-        r.contenedor.toLowerCase().includes(q) ||
-        r.descripcion.toLowerCase().includes(q) ||
-        r.aceptados.some(a => a.toLowerCase().includes(q))
-      )
+      .filter(r => {
+        const haystack = [
+          r.nombre, r.categoria, r.contenedor, r.descripcion, ...r.aceptados,
+        ].join(' ').toLowerCase();
+
+        if (haystack.includes(q)) return true;
+        if (alias && haystack.includes(alias)) return true;
+        return false;
+      })
       .slice(0, 6);
   }, [query]);
 
