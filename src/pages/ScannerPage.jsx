@@ -34,7 +34,7 @@ export default function ScannerPage() {
   const [result, setResult] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
 
-  const { isLoading, loadError, classify, startInference, stopInference, rawPrediction } = useTensorflow(videoRef);
+  const { isLoading, loadError, classify, startInference, stopInference, debug } = useTensorflow(videoRef);
   const { registrarResiduo } = useLocalStorage();
 
   useEffect(() => {
@@ -52,6 +52,13 @@ export default function ScannerPage() {
         streamRef.current = stream;
         if (videoRef.current && mounted) {
           videoRef.current.srcObject = stream;
+          // CLAVE en móvil: autoPlay a veces no arranca y el frame queda negro
+          // (→ MobileNet recibe basura y da ~3%). Forzamos play() explícito.
+          try {
+            await videoRef.current.play();
+          } catch {
+            // Si play() necesita gesto del usuario, el onLoadedMetadata reintenta.
+          }
           setCameraReady(true);
         }
       } catch {
@@ -152,6 +159,7 @@ export default function ScannerPage() {
         autoPlay
         playsInline
         muted
+        onLoadedMetadata={() => videoRef.current?.play().catch(() => {})}
         className="w-full h-screen object-cover"
       />
 
@@ -199,22 +207,25 @@ export default function ScannerPage() {
             </span>
           </div>
 
-          {/* ── LECTOR EN VIVO ── lo que ve MobileNet en tiempo real, frame a frame.    */}
-          {/* Sirve de demo (muestra la IA trabajando) y de diagnóstico. Siempre visible.*/}
-          <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-sm rounded-xl px-3 py-2 max-w-[92%]">
-            {rawPrediction ? (
-              <>
-                <p className="text-yellow-300 text-xs font-mono leading-snug break-all">
-                  🔍 {rawPrediction.className}
-                </p>
-                <p className="text-green-300 text-xs font-mono mt-0.5">
-                  {(rawPrediction.probability * 100).toFixed(1)}% confianza
-                </p>
-              </>
-            ) : (
-              <p className="text-yellow-300 text-xs font-mono leading-snug">
-                🔍 Analizando…
-              </p>
+          {/* ── PANEL DIAGNÓSTICO (temporal) ── muestra el estado real del pipeline:    */}
+          {/* estado, métricas del frame de video y top-3 de MobileNet. Quitar al final. */}
+          <div className="absolute top-2 left-2 right-2 z-30 bg-black/85 backdrop-blur-sm rounded-xl p-3 font-mono text-[11px] leading-snug space-y-1 pointer-events-none">
+            <div className="text-yellow-300 font-bold break-all">
+              🔧 {debug?.stage ?? 'iniciando…'}
+            </div>
+            {debug?.vinfo && (
+              <div className="text-green-300 break-all">
+                video {debug.vinfo.w}×{debug.vinfo.h} · rs={debug.vinfo.rs} · paused={String(debug.vinfo.paused)} · t={debug.vinfo.t}s
+              </div>
+            )}
+            {debug?.preds?.length > 0 && (
+              <div className="space-y-0.5">
+                {debug.preds.map((p, i) => (
+                  <div key={i} className="text-cyan-300 break-all">
+                    {i + 1}. {p.className} — {(p.probability * 100).toFixed(1)}%
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </>

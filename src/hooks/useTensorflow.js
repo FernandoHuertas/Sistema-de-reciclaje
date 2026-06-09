@@ -82,6 +82,9 @@ export function useTensorflow(videoRef) {
   const [loadError, setLoadError] = useState(null);
   const intervalRef = useRef(null);
   const [rawPrediction, setRawPrediction] = useState(null);
+  // Estado de diagnóstico del pipeline (temporal). Se actualiza en cada intento
+  // de clasificación, incluso si el frame no está listo, para ver DÓNDE se rompe.
+  const [debug, setDebug] = useState(null);
 
   // Cargar modelo al montar
   useEffect(() => {
@@ -116,31 +119,43 @@ export function useTensorflow(videoRef) {
    * @returns {{ residuo, confidence, label } | null}
    */
   const classify = useCallback(async () => {
-    if (!model || !videoRef.current) return null;
     const video = videoRef.current;
-    if (video.readyState < 2) return null;
+    if (!model) { setDebug({ stage: 'modelo no cargado' }); return null; }
+    if (!video) { setDebug({ stage: 'sin elemento <video>' }); return null; }
 
-    // GUARDIA MÓVIL: si el stream aún no tiene dimensiones reales, el frame está vacío/negro.
-    // TF.js procesaría un tensor corrupto → predicciones basura. Salimos y esperamos el próximo tick.
-    if (video.videoWidth === 0 || video.videoHeight === 0) return null;
+    // Métricas del frame: si el video no entrega imagen, esto lo delata.
+    const vinfo = {
+      rs: video.readyState,
+      w: video.videoWidth,
+      h: video.videoHeight,
+      paused: video.paused,
+      t: Number(video.currentTime || 0).toFixed(1),
+    };
 
-    // Asignar dimensiones intrínsecas reales del stream al elemento <video>
-    // para que TensorFlow.js lea el frame en su resolución real (no un cuadro en blanco).
+    if (video.readyState < 2) { setDebug({ stage: 'video sin datos (readyState<2)', vinfo }); return null; }
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      setDebug({ stage: 'frame 0x0 — la cámara no entrega imagen', vinfo });
+      return null;
+    }
+
+    // Asignar dimensiones intrínsecas reales del stream al elemento <video>.
     video.width = video.videoWidth;
     video.height = video.videoHeight;
 
     try {
-      const predictions = await model.classify(video);
-      if (!predictions || predictions.length === 0) return null;
+      // Pedimos top-3 para diagnóstico (qué ve realmente MobileNet).
+      const predictions = await model.classify(video, 3);
+      if (!predictions || predictions.length === 0) {
+        setDebug({ stage: 'classify devolvió vacío', vinfo });
+        return null;
+      }
 
-      // Exponer la predicción #1 en crudo para el overlay de debug en pantalla.
-      // Esto permite ver exactamente qué string devuelve MobileNet antes de cualquier filtro.
-      if (predictions[0]) setRawPrediction(predictions[0]);
+      setRawPrediction(predictions[0]);
+      setDebug({ stage: 'clasificando', vinfo, preds: predictions });
 
-      // findResiduo ya filtra por CONFIDENCE_THRESHOLD y split-por-coma internamente.
-      // Si ninguna predicción supera el umbral, retorna null → fallback al buscador.
       return findResiduo(predictions);
-    } catch {
+    } catch (e) {
+      setDebug({ stage: 'error en classify: ' + (e?.message || String(e)), vinfo });
       return null;
     }
   }, [model, videoRef]);
@@ -170,5 +185,5 @@ export function useTensorflow(videoRef) {
   // Limpieza al desmontar: nunca dejar el intervalo corriendo.
   useEffect(() => () => stopInference(), [stopInference]);
 
-  return { model, isLoading, loadError, classify, startInference, stopInference, rawPrediction };
+  return { model, isLoading, loadError, classify, startInference, stopInference, rawPrediction, debug };
 }
