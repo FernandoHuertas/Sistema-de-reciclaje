@@ -81,6 +81,7 @@ export function useTensorflow(videoRef) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const intervalRef = useRef(null);
+  const canvasRef = useRef(null);
   const [rawPrediction, setRawPrediction] = useState(null);
   // Estado de diagnóstico del pipeline (temporal). Se actualiza en cada intento
   // de clasificación, incluso si el frame no está listo, para ver DÓNDE se rompe.
@@ -138,20 +139,30 @@ export function useTensorflow(videoRef) {
       return null;
     }
 
-    // Asignar dimensiones intrínsecas reales del stream al elemento <video>.
-    video.width = video.videoWidth;
-    video.height = video.videoHeight;
+    // RECORTE CENTRAL: tomamos el cuadrado central del frame y lo escalamos a
+    // 224×224 (entrada nativa de MobileNet). Así el objeto al que apuntás (el
+    // recuadro verde) LLENA la imagen, en vez de ser una porción diminuta de un
+    // frame ancho lleno de fondo. Esto sube la confianza de ~3% a valores útiles.
+    const side = Math.min(video.videoWidth, video.videoHeight);
+    const sx = (video.videoWidth - side) / 2;
+    const sy = (video.videoHeight - side) / 2;
+    if (!canvasRef.current) canvasRef.current = document.createElement('canvas');
+    const canvas = canvasRef.current;
+    canvas.width = 224;
+    canvas.height = 224;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, sx, sy, side, side, 0, 0, 224, 224);
 
     try {
-      // Pedimos top-3 para diagnóstico (qué ve realmente MobileNet).
-      const predictions = await model.classify(video, 3);
+      // Clasificamos el RECORTE (canvas), no el video completo. top-3 para diagnóstico.
+      const predictions = await model.classify(canvas, 3);
       if (!predictions || predictions.length === 0) {
         setDebug({ stage: 'classify devolvió vacío', vinfo });
         return null;
       }
 
       setRawPrediction(predictions[0]);
-      setDebug({ stage: 'clasificando', vinfo, preds: predictions });
+      setDebug({ stage: 'clasificando (recorte central)', vinfo, preds: predictions });
 
       return findResiduo(predictions);
     } catch (e) {
