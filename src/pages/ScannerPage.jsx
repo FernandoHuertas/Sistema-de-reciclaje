@@ -206,29 +206,32 @@ export default function ScannerPage() {
               Detectando en vivo… o presioná para capturar
             </span>
           </div>
-
-          {/* ── PANEL DIAGNÓSTICO (temporal) ── muestra el estado real del pipeline:    */}
-          {/* estado, métricas del frame de video y top-3 de MobileNet. Quitar al final. */}
-          <div className="absolute top-2 left-2 right-2 z-30 bg-black/85 backdrop-blur-sm rounded-xl p-3 font-mono text-[11px] leading-snug space-y-1 pointer-events-none">
-            <div className="text-yellow-300 font-bold break-all">
-              🔧 {debug?.stage ?? 'iniciando…'}
-            </div>
-            {debug?.vinfo && (
-              <div className="text-green-300 break-all">
-                video {debug.vinfo.w}×{debug.vinfo.h} · rs={debug.vinfo.rs} · paused={String(debug.vinfo.paused)} · t={debug.vinfo.t}s
-              </div>
-            )}
-            {debug?.preds?.length > 0 && (
-              <div className="space-y-0.5">
-                {debug.preds.map((p, i) => (
-                  <div key={i} className="text-cyan-300 break-all">
-                    {i + 1}. {p.className} — {(p.probability * 100).toFixed(1)}%
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </>
+      )}
+
+      {/* ── PANEL DIAGNÓSTICO (temporal) ── estado real del pipeline + top-3 de        */}
+      {/* MobileNet. Visible en 'active' Y 'classifying': al capturar se CONGELA aquí   */}
+      {/* para poder leerlo / sacarle captura. Quitar antes de la entrega final.        */}
+      {(phase === 'active' || phase === 'classifying') && (
+        <div className="absolute top-2 left-2 right-2 z-30 bg-black/85 backdrop-blur-sm rounded-xl p-3 font-mono text-[11px] leading-snug space-y-1 pointer-events-none">
+          <div className="text-yellow-300 font-bold break-all">
+            🔧 {debug?.stage ?? 'iniciando…'}
+          </div>
+          {debug?.vinfo && (
+            <div className="text-green-300 break-all">
+              video {debug.vinfo.w}×{debug.vinfo.h} · rs={debug.vinfo.rs} · paused={String(debug.vinfo.paused)} · t={debug.vinfo.t}s
+            </div>
+          )}
+          {debug?.preds?.length > 0 && (
+            <div className="space-y-0.5">
+              {debug.preds.map((p, i) => (
+                <div key={i} className="text-cyan-300 break-all">
+                  {i + 1}. {p.className} — {(p.probability * 100).toFixed(1)}%
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Estado CLASSIFYING */}
