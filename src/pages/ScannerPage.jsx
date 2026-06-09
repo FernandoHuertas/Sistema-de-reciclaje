@@ -85,10 +85,14 @@ export default function ScannerPage() {
     if (phase !== 'active') return;
     const res = await classify();
     if (res) {
-      const lowConfidence = !res.residuo || res.confidence < 0.4;
-      setResult({ ...res, lowConfidence });
-      setPhase('classifying');
+      // Resultado válido: la IA encontró un match con confianza ≥ 50%
+      setResult({ ...res, lowConfidence: false });
+    } else {
+      // Sin resultado confiable: ninguna predicción superó el umbral del 50%.
+      // Activar inmediatamente el panel de "No reconocido" para guiar al usuario al buscador.
+      setResult({ residuo: null, confidence: 0, label: 'Confianza insuficiente (< 50%)', lowConfidence: true });
     }
+    setPhase('classifying');
   }, [phase, classify]);
 
   function handleReciclé() {
