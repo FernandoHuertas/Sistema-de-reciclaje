@@ -28,23 +28,26 @@ const CONFIDENCE_THRESHOLD = 0.50;
 function findResiduo(predictions) {
   for (const pred of predictions) {
     // Descartar predicciones con probabilidad <= umbral (escala decimal 0–1, no porcentaje)
-    // Condición de aceptación: probabilidad ESTRICTAMENTE MAYOR a 0.50
     if (pred.probability <= CONFIDENCE_THRESHOLD) continue;
 
-    // Normalizar label: minúsculas + sin espacios sobrantes (previene fallos por "Banana" vs "banana")
-    const label = pred.className.toLowerCase().trim();
+    // MobileNet devuelve classNames separados por comas (ej. "water bottle, pop bottle").
+    // Dividimos por coma y buscamos match contra cada término individualmente.
+    const terms = pred.className.toLowerCase().split(',').map(t => t.trim()).filter(Boolean);
 
-    // Intentar match directo
-    if (mappingIA[label]) {
-      const residuo = residuos.find(r => r.id === mappingIA[label]);
-      if (residuo) return { residuo, confidence: pred.probability, label: pred.className };
-    }
-
-    // Intentar match parcial
-    for (const [key, residuoId] of Object.entries(mappingIA)) {
-      if (label.includes(key) || key.includes(label)) {
-        const residuo = residuos.find(r => r.id === residuoId);
+    for (const term of terms) {
+      // 1. Match directo contra llave exacta del JSON
+      if (mappingIA[term]) {
+        const residuo = residuos.find(r => r.id === mappingIA[term]);
         if (residuo) return { residuo, confidence: pred.probability, label: pred.className };
+      }
+
+      // 2. Búsqueda flexible: el término de MobileNet contiene una llave del JSON, o viceversa.
+      //    Cubre casos como "water bottle, pop bottle" → coincide con "water bottle"
+      for (const [key, residuoId] of Object.entries(mappingIA)) {
+        if (term.includes(key) || key.includes(term)) {
+          const residuo = residuos.find(r => r.id === residuoId);
+          if (residuo) return { residuo, confidence: pred.probability, label: pred.className };
+        }
       }
     }
   }
@@ -60,6 +63,7 @@ export function useTensorflow(videoRef) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const intervalRef = useRef(null);
+  const [rawPrediction, setRawPrediction] = useState(null);
 
   // Cargar modelo al montar
   useEffect(() => {
@@ -111,7 +115,11 @@ export function useTensorflow(videoRef) {
       const predictions = await model.classify(video);
       if (!predictions || predictions.length === 0) return null;
 
-      // findResiduo ya filtra por CONFIDENCE_THRESHOLD internamente.
+      // Exponer la predicción #1 en crudo para el overlay de debug en pantalla.
+      // Esto permite ver exactamente qué string devuelve MobileNet antes de cualquier filtro.
+      if (predictions[0]) setRawPrediction(predictions[0]);
+
+      // findResiduo ya filtra por CONFIDENCE_THRESHOLD y split-por-coma internamente.
       // Si ninguna predicción supera el umbral, retorna null → fallback al buscador.
       return findResiduo(predictions);
     } catch {
@@ -138,5 +146,5 @@ export function useTensorflow(videoRef) {
     }
   }
 
-  return { model, isLoading, loadError, classify, startInference, stopInference };
+  return { model, isLoading, loadError, classify, startInference, stopInference, rawPrediction };
 }

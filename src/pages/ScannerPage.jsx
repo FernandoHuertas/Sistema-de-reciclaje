@@ -34,7 +34,7 @@ export default function ScannerPage() {
   const [result, setResult] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
 
-  const { isLoading, loadError, classify } = useTensorflow(videoRef);
+  const { isLoading, loadError, classify, rawPrediction } = useTensorflow(videoRef);
   const { registrarResiduo } = useLocalStorage();
 
   useEffect(() => {
@@ -186,6 +186,19 @@ export default function ScannerPage() {
               Presioná para clasificar
             </span>
           </div>
+
+          {/* ── DEBUG OVERLAY ── muestra la predicción cruda de MobileNet en tiempo real   */}
+          {/* Visible solo al presionar el botón; eliminar antes de la entrega final        */}
+          {rawPrediction && (
+            <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-sm rounded-xl px-3 py-2 max-w-[92%]">
+              <p className="text-yellow-300 text-xs font-mono leading-snug break-all">
+                🔍 {rawPrediction.className}
+              </p>
+              <p className="text-green-300 text-xs font-mono mt-0.5">
+                {(rawPrediction.probability * 100).toFixed(1)}% confianza
+              </p>
+            </div>
+          )}
         </>
       )}
 
