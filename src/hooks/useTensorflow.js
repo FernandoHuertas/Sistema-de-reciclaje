@@ -17,8 +17,36 @@ async function loadTFModules() {
 
 // Umbral mínimo de confianza (escala DECIMAL 0–1, no porcentaje).
 // MobileNet devuelve probabilidades entre 0.0 y 1.0.
-// Solo se aceptan predicciones con probabilidad ESTRICTAMENTE MAYOR a este valor (> 0.50).
-const CONFIDENCE_THRESHOLD = 0.50;
+// CLAVE: con la cámara EN VIVO (fondo, movimiento, luz variable) un objeto real
+// rara vez supera 0.50. Un banano típico da ~0.25–0.40. Un umbral alto rechazaba
+// TODOS los objetos reales antes de buscar el match. Mantener bajo y dejar que el
+// matching por palabra completa (abajo) sea quien filtre la calidad.
+const CONFIDENCE_THRESHOLD = 0.12;
+
+// Escapa caracteres especiales de regex dentro de una llave.
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Devuelve el id de residuo para un término de MobileNet, o null.
+ * Usa coincidencia EXACTA o de PALABRA COMPLETA — nunca subcadena arbitraria.
+ * Esto elimina falsos positivos de texturas: "radiator" ya NO matchea "radio",
+ * "ashcan" ya NO matchea "can" (sin frontera de palabra), etc.
+ */
+function matchTermToResiduoId(term) {
+  // 1. Coincidencia exacta contra una llave del JSON
+  if (mappingIA[term]) return mappingIA[term];
+
+  // 2. La llave aparece como palabra/frase COMPLETA dentro del término.
+  //    Ej: "trash can" contiene la palabra completa "can" → matchea.
+  //        "radiator" NO contiene la palabra completa "radio" → no matchea.
+  for (const [key, residuoId] of Object.entries(mappingIA)) {
+    const re = new RegExp(`(^|\\W)${escapeRegExp(key)}(\\W|$)`);
+    if (re.test(term)) return residuoId;
+  }
+  return null;
+}
 
 /**
  * Dado las predicciones de MobileNet, busca el residuo correspondiente.
@@ -27,27 +55,17 @@ const CONFIDENCE_THRESHOLD = 0.50;
  */
 function findResiduo(predictions) {
   for (const pred of predictions) {
-    // Descartar predicciones con probabilidad <= umbral (escala decimal 0–1, no porcentaje)
-    if (pred.probability <= CONFIDENCE_THRESHOLD) continue;
+    if (pred.probability < CONFIDENCE_THRESHOLD) continue;
 
-    // MobileNet devuelve classNames separados por comas (ej. "water bottle, pop bottle").
+    // MobileNet devuelve classNames separados por comas (ej. "pop bottle, soda bottle").
     // Dividimos por coma y buscamos match contra cada término individualmente.
     const terms = pred.className.toLowerCase().split(',').map(t => t.trim()).filter(Boolean);
 
     for (const term of terms) {
-      // 1. Match directo contra llave exacta del JSON
-      if (mappingIA[term]) {
-        const residuo = residuos.find(r => r.id === mappingIA[term]);
+      const id = matchTermToResiduoId(term);
+      if (id) {
+        const residuo = residuos.find(r => r.id === id);
         if (residuo) return { residuo, confidence: pred.probability, label: pred.className };
-      }
-
-      // 2. Búsqueda flexible: el término de MobileNet contiene una llave del JSON, o viceversa.
-      //    Cubre casos como "water bottle, pop bottle" → coincide con "water bottle"
-      for (const [key, residuoId] of Object.entries(mappingIA)) {
-        if (term.includes(key) || key.includes(term)) {
-          const residuo = residuos.find(r => r.id === residuoId);
-          if (residuo) return { residuo, confidence: pred.probability, label: pred.className };
-        }
       }
     }
   }
