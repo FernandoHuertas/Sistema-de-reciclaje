@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import NavBar from './components/NavBar';
+import BadgeUnlockToast from './components/BadgeUnlockToast';
 import HomePage from './pages/HomePage';
 import ScannerPage from './pages/ScannerPage';
 import SearchPage from './pages/SearchPage';
@@ -11,6 +12,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <NavBar />
+      {/* Vigilante global de insignias: muestra el toast de desbloqueo en cualquier pantalla. */}
+      <BadgeUnlockToast />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/scanner" element={<ScannerPage />} />

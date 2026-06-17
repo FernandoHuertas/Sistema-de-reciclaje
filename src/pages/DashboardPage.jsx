@@ -1,4 +1,7 @@
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useGamification } from '../hooks/useGamification';
+import ScoreCard from '../components/ScoreCard';
+import BadgeCard from '../components/BadgeCard';
 
 const NIVELES = [
   { nivel: 1, nombre: 'Semilla',  puntosMin: 0   },
@@ -60,17 +63,21 @@ function NivelBar({ puntos }) {
 
 export default function DashboardPage() {
   const { userData, resetUserData } = useLocalStorage();
+  // Sin onUnlock: la persistencia + toast los maneja BadgeUnlockToast (global).
+  // Aquí solo necesitamos la evaluación para mostrar la grilla.
+  const { insignias, totalDesbloqueadas, total, nuevas } = useGamification(userData);
 
   const stats = [
-    { label: 'Puntos totales',        value: userData.puntos,             icon: '⭐', unit: 'pts',  color: '#F1C40F' },
-    { label: 'Kg reciclados',         value: userData.kgTotal.toFixed(2), icon: '⚖️', unit: 'kg',   color: '#27AE60' },
-    { label: 'CO₂ ahorrado',          value: userData.co2Total.toFixed(2),icon: '🌬️', unit: 'kg',   color: '#2980B9' },
-    { label: 'Racha actual',          value: userData.rachaActual,        icon: '🔥', unit: 'días', color: '#E74C3C' },
-    { label: 'Residuos clasificados', value: userData.historial.length,   icon: '♻️', unit: '',     color: '#1F5C3E' },
+    { label: 'Puntos totales',        value: userData.puntos,              icon: '⭐', unit: 'pts',  color: '#F1C40F', animate: false },
+    { label: 'Kg reciclados',         value: userData.kgTotal.toFixed(2),  icon: '⚖️', unit: 'kg',   color: '#27AE60', animate: true  },
+    { label: 'CO₂ ahorrado',          value: userData.co2Total.toFixed(2), icon: '🌬️', unit: 'kg',   color: '#2980B9', animate: true  },
+    { label: 'Racha actual',          value: userData.rachaActual,         icon: '🔥', unit: 'días', color: '#E74C3C', animate: false },
+    { label: 'Residuos clasificados', value: userData.historial.length,    icon: '♻️', unit: '',     color: '#1F5C3E', animate: false },
+    { label: 'Insignias',             value: `${totalDesbloqueadas}/${total}`, icon: '🎖️', unit: '', color: '#8E44AD', animate: false },
   ];
 
   return (
-    <div className="min-h-screen pb-8" style={{ backgroundColor: '#F0FDF4' }}>
+    <div className="min-h-screen pb-8 page-fade" style={{ backgroundColor: '#F0FDF4' }}>
 
       <div className="px-4 pt-8 pb-6" style={{ backgroundColor: '#1F5C3E' }}>
         <h1 className="text-2xl font-bold text-white mb-1">🏆 Mi impacto</h1>
@@ -81,17 +88,31 @@ export default function DashboardPage() {
 
         <NivelBar puntos={userData.puntos} />
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {stats.map(({ label, value, icon, unit, color }) => (
-            <div key={label} className="bg-white rounded-2xl p-4 shadow-sm">
-              <div className="text-2xl mb-1">{icon}</div>
-              <div className="text-2xl font-bold" style={{ color }}>
-                {value}
-                {unit && <span className="text-sm font-normal text-gray-400 ml-1">{unit}</span>}
-              </div>
-              <div className="text-xs text-gray-400 mt-0.5">{label}</div>
-            </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+          {stats.map((s) => (
+            <ScoreCard key={s.label} {...s} />
           ))}
+        </div>
+
+        {/* ── Sistema de insignias ── */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold" style={{ color: '#1A2E1A' }}>
+              🎖️ Insignias
+            </h2>
+            <span className="text-xs text-gray-400">
+              {totalDesbloqueadas} de {total} desbloqueadas
+            </span>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            {insignias.map((ins) => (
+              <BadgeCard
+                key={ins.id}
+                insignia={ins}
+                destacar={nuevas.includes(ins.id)}
+              />
+            ))}
+          </div>
         </div>
 
         {userData.historial.length > 0 && (
@@ -108,6 +129,7 @@ export default function DashboardPage() {
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0"
                     style={{ backgroundColor: item.colorHex || '#888' }}
+                    aria-hidden="true"
                   >
                     ♻️
                   </div>

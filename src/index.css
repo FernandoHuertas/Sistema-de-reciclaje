@@ -16,3 +16,25 @@ body {
   color: #1A2E1A;
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+/* Ícono con rebote suave (tarjetas de estadística del dashboard). */
+@keyframes ecoBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.icon-anim { animation: ecoBounce 2.2s ease-in-out infinite; }
+
+/* Aparición tipo "pop" para insignias recién desbloqueadas y el toast. */
+@keyframes badgePop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.badge-pop { animation: badgePop 0.5s ease-out; }
+
+/* Transición de página (fade + leve subida) — Etapa 5 polish. */
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-fade { animation: pageFade 0.35s ease-out; }

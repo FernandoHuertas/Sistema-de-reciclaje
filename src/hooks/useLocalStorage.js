@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const STORAGE_KEY = 'ecoscan_user_data';
 
@@ -12,33 +12,59 @@ const DEFAULT_STATE = {
   insigniasDesbloqueadas: [],
 };
 
+// ── Store compartido a nivel de módulo ──────────────────────────────────────
+// Cada componente que usa useLocalStorage tenía su propia copia del estado, así
+// que la barra de puntos del NavBar no se actualizaba al reciclar sin recargar.
+// Con un store único + suscripciones, TODOS los componentes ven el mismo estado
+// y se re-renderizan al instante cuando cambia.
+
+function cargarInicial() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return DEFAULT_STATE;
+    return { ...DEFAULT_STATE, ...JSON.parse(saved) };
+  } catch {
+    return DEFAULT_STATE;
+  }
+}
+
+let estado = cargarInicial();
+const listeners = new Set();
+
+function persistir() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+  } catch {
+    // localStorage lleno o bloqueado — ignorar silenciosamente
+  }
+}
+
+function setEstado(updater) {
+  estado = typeof updater === 'function' ? updater(estado) : updater;
+  persistir();
+  listeners.forEach((l) => l(estado));
+}
+
 export function useLocalStorage() {
-  const [userData, setUserData] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return DEFAULT_STATE;
-      const parsed = JSON.parse(saved);
-      return { ...DEFAULT_STATE, ...parsed };
-    } catch {
-      return DEFAULT_STATE;
-    }
-  });
+  const [userData, setUserData] = useState(estado);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-    } catch {
-      // localStorage lleno o bloqueado — ignorar silenciosamente
-    }
-  }, [userData]);
+    const listener = (s) => setUserData(s);
+    listeners.add(listener);
+    // Sincronizar por si el estado cambió entre el primer render y este efecto.
+    setUserData(estado);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
 
   /**
    * Registra que el usuario recicló un residuo.
    * Actualiza puntos, kg, co2 y racha de días consecutivos.
    * @param {Object} residuo — ítem de residuos.json
    */
-  function registrarResiduo(residuo) {
-    setUserData(prev => {
+  const registrarResiduo = useCallback((residuo) => {
+    setEstado((prev) => {
       const hoy = new Date().toDateString();
       const ultima = prev.ultimaActividad
         ? new Date(prev.ultimaActividad).toDateString()
@@ -74,12 +100,35 @@ export function useLocalStorage() {
         historial: [entrada, ...prev.historial].slice(0, 50),
       };
     });
-  }
+  }, []);
 
-  function resetUserData() {
-    setUserData(DEFAULT_STATE);
-    localStorage.removeItem(STORAGE_KEY);
-  }
+  /**
+   * Marca insignias como desbloqueadas (merge sin duplicados).
+   * No-op si todas las ids ya estaban registradas (evita renders innecesarios).
+   */
+  const desbloquearInsignias = useCallback((ids) => {
+    setEstado((prev) => {
+      const set = new Set(prev.insigniasDesbloqueadas || []);
+      let cambio = false;
+      ids.forEach((id) => {
+        if (!set.has(id)) {
+          set.add(id);
+          cambio = true;
+        }
+      });
+      if (!cambio) return prev;
+      return { ...prev, insigniasDesbloqueadas: [...set] };
+    });
+  }, []);
 
-  return { userData, registrarResiduo, resetUserData };
+  const resetUserData = useCallback(() => {
+    setEstado(DEFAULT_STATE);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignorar
+    }
+  }, []);
+
+  return { userData, registrarResiduo, desbloquearInsignias, resetUserData };
 }
