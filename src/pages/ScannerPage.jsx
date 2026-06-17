@@ -34,7 +34,7 @@ export default function ScannerPage() {
   const [result, setResult] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
 
-  const { isLoading, loadError, classify, startInference, stopInference, debug } = useTensorflow(videoRef);
+  const { isLoading, loadError, classify, startInference, stopInference } = useTensorflow(videoRef);
   const { registrarResiduo } = useLocalStorage();
 
   useEffect(() => {
@@ -83,7 +83,6 @@ export default function ScannerPage() {
 
   // Detección continua EN VIVO mientras la cámara está activa (~2.5 FPS).
   // Apuntás y detecta solo; en cuanto encuentra un residuo muestra la tarjeta.
-  // El overlay en vivo (arriba-izquierda) refleja lo que ve la IA en cada frame.
   useEffect(() => {
     if (phase !== 'active') return;
     startInference((res) => {
@@ -197,6 +196,7 @@ export default function ScannerPage() {
           <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-3 px-4">
             <button
               onClick={handleClasificar}
+              aria-label="Capturar y clasificar el residuo"
               className="w-20 h-20 rounded-full text-3xl shadow-2xl border-4 border-white active:scale-90 transition-transform"
               style={{ backgroundColor: '#4ADE80' }}
             >
@@ -207,31 +207,6 @@ export default function ScannerPage() {
             </span>
           </div>
         </>
-      )}
-
-      {/* ── PANEL DIAGNÓSTICO (temporal) ── estado real del pipeline + top-3 de        */}
-      {/* MobileNet. Visible en 'active' Y 'classifying': al capturar se CONGELA aquí   */}
-      {/* para poder leerlo / sacarle captura. Quitar antes de la entrega final.        */}
-      {(phase === 'active' || phase === 'classifying') && (
-        <div className="absolute top-2 left-2 right-2 z-30 bg-black/85 backdrop-blur-sm rounded-xl p-3 font-mono text-[11px] leading-snug space-y-1 pointer-events-none">
-          <div className="text-yellow-300 font-bold break-all">
-            🔧 {debug?.stage ?? 'iniciando…'}
-          </div>
-          {debug?.vinfo && (
-            <div className="text-green-300 break-all">
-              video {debug.vinfo.w}×{debug.vinfo.h} · rs={debug.vinfo.rs} · paused={String(debug.vinfo.paused)} · t={debug.vinfo.t}s
-            </div>
-          )}
-          {debug?.preds?.length > 0 && (
-            <div className="space-y-0.5">
-              {debug.preds.map((p, i) => (
-                <div key={i} className="text-cyan-300 break-all">
-                  {i + 1}. {p.className} — {(p.probability * 100).toFixed(1)}%
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       )}
 
       {/* Estado CLASSIFYING */}
@@ -290,6 +265,7 @@ export default function ScannerPage() {
                   </button>
                   <button
                     onClick={handleReintentar}
+                    aria-label="Descartar y volver a escanear"
                     className="px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 font-medium active:scale-95 transition-transform"
                   >
                     ✗
@@ -317,6 +293,7 @@ export default function ScannerPage() {
                   </button>
                   <button
                     onClick={handleReintentar}
+                    aria-label="Volver a escanear"
                     className="px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 font-medium active:scale-95 transition-transform"
                   >
                     ↩

@@ -134,7 +134,7 @@ export default function MapPage() {
   }, [filtro]);
 
   return (
-    <div className="flex flex-col" style={{ backgroundColor: '#F0FDF4' }}>
+    <div className="flex flex-col page-fade" style={{ backgroundColor: '#F0FDF4' }}>
       {/* Encabezado + filtros */}
       <div className="px-4 pt-5 pb-3 bg-white shadow-sm">
         <h1 className="font-bold text-lg mb-1" style={{ color: '#1A2E1A' }}>

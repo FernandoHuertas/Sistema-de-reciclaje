@@ -83,9 +83,6 @@ export function useTensorflow(videoRef) {
   const intervalRef = useRef(null);
   const canvasRef = useRef(null);
   const [rawPrediction, setRawPrediction] = useState(null);
-  // Estado de diagnóstico del pipeline (temporal). Se actualiza en cada intento
-  // de clasificación, incluso si el frame no está listo, para ver DÓNDE se rompe.
-  const [debug, setDebug] = useState(null);
 
   // Cargar modelo al montar
   useEffect(() => {
@@ -121,28 +118,15 @@ export function useTensorflow(videoRef) {
    */
   const classify = useCallback(async () => {
     const video = videoRef.current;
-    if (!model) { setDebug({ stage: 'modelo no cargado' }); return null; }
-    if (!video) { setDebug({ stage: 'sin elemento <video>' }); return null; }
-
-    // Métricas del frame: si el video no entrega imagen, esto lo delata.
-    const vinfo = {
-      rs: video.readyState,
-      w: video.videoWidth,
-      h: video.videoHeight,
-      paused: video.paused,
-      t: Number(video.currentTime || 0).toFixed(1),
-    };
-
-    if (video.readyState < 2) { setDebug({ stage: 'video sin datos (readyState<2)', vinfo }); return null; }
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      setDebug({ stage: 'frame 0x0 — la cámara no entrega imagen', vinfo });
-      return null;
-    }
+    if (!model || !video) return null;
+    if (video.readyState < 2) return null;
+    // Si el stream aún no entrega dimensiones, el frame está vacío: esperamos.
+    if (video.videoWidth === 0 || video.videoHeight === 0) return null;
 
     // RECORTE CENTRAL: tomamos el cuadrado central del frame y lo escalamos a
     // 224×224 (entrada nativa de MobileNet). Así el objeto al que apuntás (el
     // recuadro verde) LLENA la imagen, en vez de ser una porción diminuta de un
-    // frame ancho lleno de fondo. Esto sube la confianza de ~3% a valores útiles.
+    // frame ancho lleno de fondo — la confianza sube a valores útiles.
     const side = Math.min(video.videoWidth, video.videoHeight);
     const sx = (video.videoWidth - side) / 2;
     const sy = (video.videoHeight - side) / 2;
@@ -150,23 +134,14 @@ export function useTensorflow(videoRef) {
     const canvas = canvasRef.current;
     canvas.width = 224;
     canvas.height = 224;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, sx, sy, side, side, 0, 0, 224, 224);
+    canvas.getContext('2d').drawImage(video, sx, sy, side, side, 0, 0, 224, 224);
 
     try {
-      // Clasificamos el RECORTE (canvas), no el video completo. top-3 para diagnóstico.
       const predictions = await model.classify(canvas, 3);
-      if (!predictions || predictions.length === 0) {
-        setDebug({ stage: 'classify devolvió vacío', vinfo });
-        return null;
-      }
-
+      if (!predictions || predictions.length === 0) return null;
       setRawPrediction(predictions[0]);
-      setDebug({ stage: 'clasificando (recorte central)', vinfo, preds: predictions });
-
       return findResiduo(predictions);
-    } catch (e) {
-      setDebug({ stage: 'error en classify: ' + (e?.message || String(e)), vinfo });
+    } catch {
       return null;
     }
   }, [model, videoRef]);
@@ -196,5 +171,5 @@ export function useTensorflow(videoRef) {
   // Limpieza al desmontar: nunca dejar el intervalo corriendo.
   useEffect(() => () => stopInference(), [stopInference]);
 
-  return { model, isLoading, loadError, classify, startInference, stopInference, rawPrediction, debug };
+  return { model, isLoading, loadError, classify, startInference, stopInference, rawPrediction };
 }

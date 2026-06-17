@@ -61,7 +61,7 @@ export default function ResidueDetailPage() {
   }
 
   return (
-    <div className="min-h-screen pb-32" style={{ backgroundColor: '#F0FDF4' }}>
+    <div className="min-h-screen pb-32 page-fade" style={{ backgroundColor: '#F0FDF4' }}>
 
       {/* Header con color del contenedor */}
       <div

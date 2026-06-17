@@ -23,7 +23,7 @@ export default function HomePage() {
   const { userData } = useLocalStorage();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F0FDF4' }}>
+    <div className="min-h-screen page-fade" style={{ backgroundColor: '#F0FDF4' }}>
 
       {/* Hero section */}
       <section
