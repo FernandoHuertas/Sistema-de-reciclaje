@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import mappingIA from '../data/mappingIA.json';
 import residuos from '../data/residuos.json';
 
-// Lazy import de TF.js para no bloquear el bundle inicial
+// Carga diferida de TF.js para no inflar el bundle inicial.
 let tfLoaded = false;
 let mobilenetModule = null;
 
@@ -15,32 +15,21 @@ async function loadTFModules() {
   return mobilenetModule;
 }
 
-// Umbral mínimo de confianza (escala DECIMAL 0–1, no porcentaje).
-// MobileNet devuelve probabilidades entre 0.0 y 1.0.
-// CLAVE: con la cámara EN VIVO (fondo, movimiento, luz variable) un objeto real
-// rara vez supera 0.50. Un banano típico da ~0.25–0.40. Un umbral alto rechazaba
-// TODOS los objetos reales antes de buscar el match. Mantener bajo y dejar que el
-// matching por palabra completa (abajo) sea quien filtre la calidad.
+// Confianza mínima (escala 0–1). Con la cámara en vivo MobileNet rara vez pasa
+// de 0.50, así que usamos un umbral bajo y dejamos que el matching por palabra
+// completa filtre la calidad.
 const CONFIDENCE_THRESHOLD = 0.12;
 
-// Escapa caracteres especiales de regex dentro de una llave.
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Devuelve el id de residuo para un término de MobileNet, o null.
- * Usa coincidencia EXACTA o de PALABRA COMPLETA — nunca subcadena arbitraria.
- * Esto elimina falsos positivos de texturas: "radiator" ya NO matchea "radio",
- * "ashcan" ya NO matchea "can" (sin frontera de palabra), etc.
- */
+// Devuelve el id de residuo para un término de MobileNet, o null.
+// Coincidencia exacta o por palabra completa: evita falsos positivos como
+// "radiator" matcheando la llave "radio".
 function matchTermToResiduoId(term) {
-  // 1. Coincidencia exacta contra una llave del JSON
   if (mappingIA[term]) return mappingIA[term];
 
-  // 2. La llave aparece como palabra/frase COMPLETA dentro del término.
-  //    Ej: "trash can" contiene la palabra completa "can" → matchea.
-  //        "radiator" NO contiene la palabra completa "radio" → no matchea.
   for (const [key, residuoId] of Object.entries(mappingIA)) {
     const re = new RegExp(`(^|\\W)${escapeRegExp(key)}(\\W|$)`);
     if (re.test(term)) return residuoId;
@@ -48,17 +37,12 @@ function matchTermToResiduoId(term) {
   return null;
 }
 
-/**
- * Dado las predicciones de MobileNet, busca el residuo correspondiente.
- * Solo considera predicciones con probabilidad >= CONFIDENCE_THRESHOLD.
- * Itera por todas las predicciones en orden de confianza (de mayor a menor).
- */
+// Busca el primer residuo que corresponda a alguna predicción sobre el umbral.
 function findResiduo(predictions) {
   for (const pred of predictions) {
     if (pred.probability < CONFIDENCE_THRESHOLD) continue;
 
-    // MobileNet devuelve classNames separados por comas (ej. "pop bottle, soda bottle").
-    // Dividimos por coma y buscamos match contra cada término individualmente.
+    // Las etiquetas vienen separadas por comas (ej. "pop bottle, soda bottle").
     const terms = pred.className.toLowerCase().split(',').map(t => t.trim()).filter(Boolean);
 
     for (const term of terms) {
@@ -72,10 +56,7 @@ function findResiduo(predictions) {
   return null;
 }
 
-/**
- * Hook que gestiona la carga del modelo MobileNet y la inferencia sobre un elemento <video>.
- * @param {React.RefObject} videoRef — ref al elemento <video> con el stream activo
- */
+// Gestiona la carga del modelo MobileNet y la inferencia sobre un <video>.
 export function useTensorflow(videoRef) {
   const [model, setModel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +65,6 @@ export function useTensorflow(videoRef) {
   const canvasRef = useRef(null);
   const [rawPrediction, setRawPrediction] = useState(null);
 
-  // Cargar modelo al montar
   useEffect(() => {
     let cancelled = false;
 
@@ -100,7 +80,7 @@ export function useTensorflow(videoRef) {
         }
       } catch (err) {
         if (!cancelled) {
-          setLoadError(err.message || 'Error cargando el modelo de IA');
+          setLoadError(err.message || 'Error cargando el modelo de clasificación');
           setIsLoading(false);
         }
       }
@@ -110,23 +90,16 @@ export function useTensorflow(videoRef) {
     return () => { cancelled = true; };
   }, []);
 
-  /**
-   * Clasifica el frame actual del video.
-   * Solo retorna un resultado si la confianza supera CONFIDENCE_THRESHOLD (50%).
-   * Si ninguna predicción mapeada supera el umbral, retorna null (activa el fallback).
-   * @returns {{ residuo, confidence, label } | null}
-   */
+  // Clasifica el frame actual; devuelve el residuo encontrado o null.
   const classify = useCallback(async () => {
     const video = videoRef.current;
     if (!model || !video) return null;
     if (video.readyState < 2) return null;
-    // Si el stream aún no entrega dimensiones, el frame está vacío: esperamos.
+    // Sin dimensiones todavía: el frame está vacío, esperamos al siguiente.
     if (video.videoWidth === 0 || video.videoHeight === 0) return null;
 
-    // RECORTE CENTRAL: tomamos el cuadrado central del frame y lo escalamos a
-    // 224×224 (entrada nativa de MobileNet). Así el objeto al que apuntás (el
-    // recuadro verde) LLENA la imagen, en vez de ser una porción diminuta de un
-    // frame ancho lleno de fondo — la confianza sube a valores útiles.
+    // Recortamos el cuadrado central del frame y lo escalamos a 224x224 (entrada
+    // de MobileNet). Así el objeto apuntado llena la imagen y mejora la precisión.
     const side = Math.min(video.videoWidth, video.videoHeight);
     const sx = (video.videoWidth - side) / 2;
     const sy = (video.videoHeight - side) / 2;
@@ -146,7 +119,6 @@ export function useTensorflow(videoRef) {
     }
   }, [model, videoRef]);
 
-  /** Detiene la inferencia continua */
   const stopInference = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -154,12 +126,7 @@ export function useTensorflow(videoRef) {
     }
   }, []);
 
-  /**
-   * Inicia inferencia continua (2.5 FPS). En cada tick clasifica el frame
-   * actual; si encuentra un residuo, llama onResult. Además, classify()
-   * actualiza rawPrediction en CADA tick, así el overlay en vivo siempre
-   * muestra lo último que ve MobileNet (aunque no haya match).
-   */
+  // Inferencia continua a ~2.5 FPS; llama onResult cuando encuentra un residuo.
   const startInference = useCallback((onResult) => {
     stopInference();
     intervalRef.current = setInterval(async () => {
@@ -168,7 +135,7 @@ export function useTensorflow(videoRef) {
     }, 400);
   }, [classify, stopInference]);
 
-  // Limpieza al desmontar: nunca dejar el intervalo corriendo.
+  // Cortar el intervalo al desmontar.
   useEffect(() => () => stopInference(), [stopInference]);
 
   return { model, isLoading, loadError, classify, startInference, stopInference, rawPrediction };

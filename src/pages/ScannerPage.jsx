@@ -52,12 +52,12 @@ export default function ScannerPage() {
         streamRef.current = stream;
         if (videoRef.current && mounted) {
           videoRef.current.srcObject = stream;
-          // CLAVE en móvil: autoPlay a veces no arranca y el frame queda negro
-          // (→ MobileNet recibe basura y da ~3%). Forzamos play() explícito.
+          // En móvil el autoPlay a veces no arranca y el frame queda en negro,
+          // así que forzamos play() explícito.
           try {
             await videoRef.current.play();
           } catch {
-            // Si play() necesita gesto del usuario, el onLoadedMetadata reintenta.
+            // Si play() requiere gesto del usuario, onLoadedMetadata reintenta.
           }
           setCameraReady(true);
         }
@@ -81,8 +81,8 @@ export default function ScannerPage() {
     if (loadError) setPhase('error');
   }, [isLoading, cameraReady, loadError, phase]);
 
-  // Detección continua EN VIVO mientras la cámara está activa (~2.5 FPS).
-  // Apuntás y detecta solo; en cuanto encuentra un residuo muestra la tarjeta.
+  // Detección continua mientras la cámara está activa: al encontrar un residuo
+  // se muestra la tarjeta de resultado.
   useEffect(() => {
     if (phase !== 'active') return;
     startInference((res) => {
@@ -103,11 +103,9 @@ export default function ScannerPage() {
     if (phase !== 'active') return;
     const res = await classify();
     if (res) {
-      // Resultado válido: la IA encontró un residuo que coincide con la predicción.
       setResult({ ...res, lowConfidence: false });
     } else {
-      // Sin coincidencia: ninguna predicción mapeó a un residuo conocido.
-      // Activar el panel de "No reconocido" para guiar al usuario al buscador.
+      // Ninguna predicción coincidió con un residuo conocido.
       setResult({ residuo: null, confidence: 0, label: 'Sin coincidencia clara', lowConfidence: true });
     }
     setPhase('classifying');

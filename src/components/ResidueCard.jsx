@@ -8,11 +8,7 @@ const COLORES_CONTENEDOR = {
   Especial: '#8E44AD',
 };
 
-/**
- * Tarjeta de resultado de un residuo (usada en la búsqueda).
- * @param {Object} residuo — ítem de residuos.json
- * @param {() => void} onClick
- */
+// Tarjeta de resultado de un residuo, usada en la búsqueda.
 export default function ResidueCard({ residuo, onClick }) {
   const color = COLORES_CONTENEDOR[residuo.contenedor] || '#888';
 

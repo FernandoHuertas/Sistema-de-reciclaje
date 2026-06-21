@@ -8,12 +8,8 @@ function formatoMeta(insignia) {
   return `${actual} / ${objetivo}`;
 }
 
-/**
- * Tarjeta de una insignia.
- * Desbloqueada → a color, con anillo verde. Bloqueada → en gris con barra de progreso %.
- * @param {Object} insignia — insignia evaluada (de useGamification)
- * @param {boolean} [destacar] — pulso de "recién desbloqueada"
- */
+// Tarjeta de insignia: a color si está desbloqueada, en gris con barra de
+// progreso si todavía no. "destacar" anima las recién obtenidas.
 export default function BadgeCard({ insignia, destacar = false }) {
   const { nombre, descripcion, icono, desbloqueada, progreso } = insignia;
 

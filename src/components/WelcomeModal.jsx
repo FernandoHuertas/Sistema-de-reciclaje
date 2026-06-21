@@ -18,10 +18,7 @@ const PASOS = [
   },
 ];
 
-/**
- * Modal de bienvenida que se muestra solo en el primer uso (3 pasos).
- * @param {() => void} onClose — marca el onboarding como completado
- */
+// Modal de bienvenida de 3 pasos, solo en el primer uso.
 export default function WelcomeModal({ onClose }) {
   const [paso, setPaso] = useState(0);
   const actual = PASOS[paso];

@@ -18,10 +18,10 @@ const MATERIALES = {
 // 'todos' + cada material como chip filtrable.
 const FILTROS = ['todos', ...Object.keys(MATERIALES)];
 
-// Centro y zoom inicial del cantón de San Carlos (según especificación del proyecto).
+// Centro y zoom inicial del cantón de San Carlos.
 const VISTA_INICIAL = { lat: 10.462, lng: -84.431, zoom: 10 };
 
-// Pin coloreado según el material PRINCIPAL (primer material de la lista).
+// Pin coloreado según el material principal del punto.
 function crearIcono(material) {
   const cfg = MATERIALES[material] || { color: '#1F5C3E', emoji: '♻️' };
   return L.divIcon({

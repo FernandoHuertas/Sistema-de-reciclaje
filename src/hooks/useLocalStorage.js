@@ -12,12 +12,8 @@ const DEFAULT_STATE = {
   insigniasDesbloqueadas: [],
 };
 
-// ── Store compartido a nivel de módulo ──────────────────────────────────────
-// Cada componente que usa useLocalStorage tenía su propia copia del estado, así
-// que la barra de puntos del NavBar no se actualizaba al reciclar sin recargar.
-// Con un store único + suscripciones, TODOS los componentes ven el mismo estado
-// y se re-renderizan al instante cuando cambia.
-
+// Store compartido a nivel de módulo: un único estado con suscripciones, para
+// que todos los componentes vean los mismos datos y se actualicen al instante.
 function cargarInicial() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -51,18 +47,13 @@ export function useLocalStorage() {
   useEffect(() => {
     const listener = (s) => setUserData(s);
     listeners.add(listener);
-    // Sincronizar por si el estado cambió entre el primer render y este efecto.
     setUserData(estado);
     return () => {
       listeners.delete(listener);
     };
   }, []);
 
-  /**
-   * Registra que el usuario recicló un residuo.
-   * Actualiza puntos, kg, co2 y racha de días consecutivos.
-   * @param {Object} residuo — ítem de residuos.json
-   */
+  // Registra un residuo reciclado: suma puntos, kg, CO2 y actualiza la racha.
   const registrarResiduo = useCallback((residuo) => {
     setEstado((prev) => {
       const hoy = new Date().toDateString();
@@ -102,10 +93,7 @@ export function useLocalStorage() {
     });
   }, []);
 
-  /**
-   * Marca insignias como desbloqueadas (merge sin duplicados).
-   * No-op si todas las ids ya estaban registradas (evita renders innecesarios).
-   */
+  // Marca insignias como desbloqueadas, sin duplicar las ya registradas.
   const desbloquearInsignias = useCallback((ids) => {
     setEstado((prev) => {
       const set = new Set(prev.insigniasDesbloqueadas || []);

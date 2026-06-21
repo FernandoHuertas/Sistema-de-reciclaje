@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import residuos from '../data/residuos.json';
 import ResidueCard from '../components/ResidueCard';
 
-// Sinónimos / palabras comunes → término que SÍ aparece en el catálogo.
-// El catálogo no tiene un ítem llamado "banano", pero sí "Residuos de frutas y
-// verduras" en la categoría "Orgánico". Este mapa hace que esas búsquedas
-// naturales encuentren la categoría correcta.
+// Palabras comunes mapeadas a un término que sí existe en el catálogo. Permite
+// que búsquedas como "banano" encuentren "Residuos de frutas y verduras".
 const SINONIMOS = {
   banano: 'orgánico', banana: 'orgánico', platano: 'orgánico', plátano: 'orgánico',
   manzana: 'orgánico', naranja: 'orgánico', limon: 'orgánico', limón: 'orgánico',

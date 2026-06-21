@@ -63,8 +63,7 @@ function NivelBar({ puntos }) {
 
 export default function DashboardPage() {
   const { userData, resetUserData } = useLocalStorage();
-  // Sin onUnlock: la persistencia + toast los maneja BadgeUnlockToast (global).
-  // Aquí solo necesitamos la evaluación para mostrar la grilla.
+  // Solo evaluamos para la grilla; el toast global se encarga de persistir.
   const { insignias, totalDesbloqueadas, total, nuevas } = useGamification(userData);
 
   const stats = [

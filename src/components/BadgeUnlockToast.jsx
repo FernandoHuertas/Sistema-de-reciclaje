@@ -2,11 +2,8 @@ import { useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useGamification } from '../hooks/useGamification';
 
-/**
- * Vigilante global de gamificación. Montado una vez en App, evalúa las insignias
- * tras cada cambio de estado (cada residuo reciclado), persiste las nuevas y
- * muestra un toast animado + confeti cuando se desbloquea una, en cualquier pantalla.
- */
+// Montado una vez en App: evalúa las insignias tras cada cambio, las persiste
+// y muestra un toast con confeti cuando se desbloquea una, desde cualquier pantalla.
 export default function BadgeUnlockToast() {
   const { userData, desbloquearInsignias } = useLocalStorage();
   const { insignias, nuevas, limpiarNuevas } = useGamification(userData, desbloquearInsignias);
@@ -28,11 +25,10 @@ export default function BadgeUnlockToast() {
           colors: ['#4ADE80', '#1F5C3E', '#F1C40F', '#FFFFFF'],
         });
       } catch {
-        // canvas-confetti no disponible — ignorar
+        // canvas-confetti no disponible
       }
     })();
 
-    // Auto-ocultar tras 5 segundos.
     const t = setTimeout(() => limpiarNuevas(), 5000);
     return () => clearTimeout(t);
   }, [insigniaNueva, limpiarNuevas]);

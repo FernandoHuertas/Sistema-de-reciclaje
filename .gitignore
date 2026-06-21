@@ -28,3 +28,8 @@ CLAUDE.md
 
 # Minutas internas del equipo (nunca subir al repo)
 /minutas
+
+# Documentos de planificación interna y herramientas de apoyo
+/docs
+.graphifyignore
+graphify-out/

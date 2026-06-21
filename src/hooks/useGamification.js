@@ -1,18 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import insignias from '../data/insignias.json';
 
-/**
- * Evalúa cada insignia contra el estado del usuario.
- * Devuelve cada insignia enriquecida con: actual, objetivo, desbloqueada, progreso (%).
- *
- * Tipos soportados (campo "tipo" en insignias.json):
- *  - count:      cantidad acumulada de residuos (global o por categoría).
- *  - firstTime:  primer evento (global o de una categoría).
- *  - streak:     días consecutivos (rachaActual).
- *  - weight:     kg totales reciclados.
- *  - co2:        kg de CO₂ ahorrados.
- *  - categories: número de categorías distintas clasificadas.
- */
+// Evalúa cada insignia contra el estado del usuario y la devuelve con su
+// progreso. Tipos: count, firstTime, streak, weight, co2 y categories
+// (algunos filtrados por categoría, según el campo "categoria" del JSON).
 export function evaluarInsignias(userData) {
   const historial = userData.historial || [];
   const total = historial.length;
@@ -55,14 +46,8 @@ export function evaluarInsignias(userData) {
   });
 }
 
-/**
- * Hook de gamificación. Recalcula las insignias cada vez que cambia userData
- * (es decir, "después de cada registro") y detecta las recién desbloqueadas
- * para animarlas y persistirlas.
- *
- * @param {Object} userData — estado del usuario de useLocalStorage
- * @param {(ids: string[]) => void} [onUnlock] — callback para persistir nuevas insignias
- */
+// Recalcula las insignias cuando cambia userData y detecta las recién
+// desbloqueadas. onUnlock (opcional) persiste las nuevas.
 export function useGamification(userData, onUnlock) {
   const evaluadas = useMemo(() => evaluarInsignias(userData), [userData]);
   const [nuevas, setNuevas] = useState([]);
@@ -76,7 +61,9 @@ export function useGamification(userData, onUnlock) {
     const yaGuardadas = new Set(userData.insigniasDesbloqueadas || []);
     const recien = idsDesbloqueadas.filter((id) => !yaGuardadas.has(id));
     if (recien.length > 0) {
-      if (onUnlock) onUnlock(recien); // persiste → userData cambia → este efecto no vuelve a disparar (ya están guardadas)
+      // Al persistir, userData cambia pero las ids ya quedan guardadas, así que
+      // el efecto no vuelve a dispararse para las mismas insignias.
+      if (onUnlock) onUnlock(recien);
       setNuevas(recien);
     }
   }, [idsDesbloqueadas, userData.insigniasDesbloqueadas, onUnlock]);
