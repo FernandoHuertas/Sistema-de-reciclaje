@@ -23,8 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Project instructions (never commit)
-CLAUDE.md
 
 # Minutas internas del equipo (nunca subir al repo)
 /minutas
